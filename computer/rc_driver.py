@@ -6,6 +6,7 @@ import serial
 import cv2
 import numpy as np
 import math
+import socket
 
 # distance data measured by ultrasonic sensor
 sensor_data = " "
@@ -29,23 +30,35 @@ class NeuralNetwork(object):
 class RCControl(object):
 
     def __init__(self):
-        self.serial_port = serial.Serial('/dev/tty.usbmodem1421', 115200, timeout=1)
+        #self.serial_port = serial.Serial('/dev/tty.usbmodem1421', 115200, timeout=1)
+        self.client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        self.client_socket.connect(('192.168.3.102',8000))                 
+        self.connection =self.client_socket.makefile('wb')
+
 
     def steer(self, prediction):
         if prediction == 2:
-            self.serial_port.write(chr(1))
+            self.connection.write(chr(1))
+            self.connection.flush()
+            #self.serial_port.write(chr(1))
             print("Forward")
         elif prediction == 0:
-            self.serial_port.write(chr(7))
+            self.connection.write(chr(7))    
+            self.connection.flush()
+            #self.serial_port.write(chr(7))
             print("Left")
         elif prediction == 1:
-            self.serial_port.write(chr(6))
+            self.connection.write(chr(6))    
+            self.connection.flush()
+            #self.serial_port.write(chr(6))
             print("Right")
         else:
             self.stop()
 
     def stop(self):
-        self.serial_port.write(chr(0))
+        self.connection.write(chr(0))
+        self.connection.flush()
+        #self.serial_port.write(chr(0))
 
 
 class DistanceToCamera(object):
@@ -284,7 +297,7 @@ class ThreadServer(object):
 
     #distance_thread = threading.Thread(target=server_thread2, args=('192.168.1.100', 8002))
     #distance_thread.start()
-    video_thread = threading.Thread(target=server_thread('192.168.1.100', 8000))
+    video_thread = threading.Thread(target=server_thread('192.168.3.100', 8000))
     video_thread.start()
 
 if __name__ == '__main__':
