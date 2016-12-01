@@ -1,0 +1,138 @@
+#include <Bridge.h>
+#include <YunServer.h>
+#include <YunClient.h>
+
+#define PORT 8000
+YunServer server(PORT);
+
+int right_pin = 6;
+int left_pin = 7;
+int forward_pin = 10;
+int reverse_pin = 9;
+
+// duration for output
+int time = 50;
+// initial command
+int command = 0;
+
+void setup() {
+  
+  Bridge.begin();  
+  server.noListenOnLocalhost();
+  server.begin();
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(2000);                       // wait for a second
+  digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+  delay(2000);                       // wait for a second
+
+  pinMode(right_pin, OUTPUT);
+  pinMode(left_pin, OUTPUT);
+  pinMode(forward_pin, OUTPUT);
+  pinMode(reverse_pin, OUTPUT);
+
+}
+
+void loop() {
+
+ YunClient client = server.accept();
+
+  if(client.connected()){
+    
+    while(client.connected()){
+      if(client.available()){
+        command = client.read();
+        send_command(command,time);      
+      }
+      else{   
+        reset();
+      }
+    }
+    client.stop();
+
+  } 
+  else {
+      digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+      delay(30);                       // wait for a second
+      digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+      delay(30);                       // wait for a second
+  }
+}
+
+void right(int time){
+  digitalWrite(right_pin, LOW);
+  delay(time);
+}
+
+void left(int time){
+  digitalWrite(left_pin, LOW);
+  delay(time);
+}
+
+void forward(int time){
+  digitalWrite(forward_pin, LOW);
+  delay(time);
+}
+
+void reverse(int time){
+  digitalWrite(reverse_pin, LOW);
+  delay(time);
+}
+
+void forward_right(int time){
+  digitalWrite(forward_pin, LOW);
+  digitalWrite(right_pin, LOW);
+  delay(time);
+}
+
+void reverse_right(int time){
+  digitalWrite(reverse_pin, LOW);
+  digitalWrite(right_pin, LOW);
+  delay(time);
+}
+
+void forward_left(int time){
+  digitalWrite(forward_pin, LOW);
+  digitalWrite(left_pin, LOW);
+  delay(time);
+}
+
+void reverse_left(int time){
+  digitalWrite(reverse_pin, LOW);
+  digitalWrite(left_pin, LOW);
+  delay(time);
+}
+
+void reset(){
+  digitalWrite(right_pin, HIGH);
+  digitalWrite(left_pin, HIGH);
+  digitalWrite(forward_pin, HIGH);
+  digitalWrite(reverse_pin, HIGH);
+}
+
+void send_command(int command, int time){
+  switch (command){
+
+     //reset command
+     case 0: reset(); break;
+
+     // single command
+     case 1: forward(time); break;
+     case 2: reverse(time); break;
+     case 3: right(time); break;
+     case 4: left(time); break;
+
+     //combination command
+     case 6: forward_right(time); break;
+     case 7: forward_left(time); break;
+     case 8: reverse_right(time); break;
+     case 9: reverse_left(time); break;
+
+     default: 
+     digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+     delay(1000);                       // wait for a second
+     digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+     delay(1000);                       // wait for a second
+     
+    }
+}
