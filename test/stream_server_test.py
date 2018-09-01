@@ -9,7 +9,7 @@ class VideoStreamingTest(object):
     def __init__(self):
 
         self.server_socket = socket.socket()
-        self.server_socket.bind(('192.168.0.115', 8000))
+        self.server_socket.bind(('192.168.0.116', 8000))
 
         self.server_socket.listen(0)
         self.connection, self.client_address = self.server_socket.accept()
@@ -24,6 +24,11 @@ class VideoStreamingTest(object):
             print "Press 'q' to exit"
 
             stream_bytes = ' '
+
+	    fps=24
+
+	    fourcc=cv2.VideoWriter_fourcc(*'MJPG')
+	    videoWriter=cv2.VideoWriter('output.avi',fourcc,fps,(320,240))
             while True:
                 stream_bytes += self.connection.read(1024)
                 first = stream_bytes.find('\xff\xd8')
@@ -39,7 +44,7 @@ class VideoStreamingTest(object):
                     #image = cv2.imdecode(np.fromstring(jpg, dtype=np.uint8), cv2.CV_LOAD_IMAGE_GRAYSCALE)
                     image = cv2.imdecode(np.fromstring(jpg, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
                     cv2.imshow('image', image)
-
+		    videoWriter.write(image)
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
         finally:
